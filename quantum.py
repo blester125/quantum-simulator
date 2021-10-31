@@ -41,11 +41,10 @@ class Qubit:
             return "|0⟩"
         if self.is_one():
             return "|1⟩"
-        if self.is_super_position():
-            neg0 = "-" if self.state[0] < 0 else ""
-            neg1 = "-" if self.state[1] < 0 else ""
-            return f"{self.__class__.__name__}(state=[{neg0}1/√2, {neg1}1/√2])"
-        return self.__repr__()
+        state = self.state.tolist()
+        state = [format_one_over_root_2(s) for s in state]
+        state = ", ".join(state)
+        return f"{self.__class__.__name__}(state=[{state}])"
 
     def __matmul__(self: 'Qubit', other: 'Qubit') -> 'Qubits':
         return tensor_product(self, other)
@@ -68,10 +67,6 @@ class Qubit:
     def is_zero(self) -> bool:
         """Does the Qubit represent a classical 0 bit?"""
         return abs(self.state[0]) == 1
-
-    def is_super_position(self):
-        """Does the Qubit represent an even superposition between 0 and 1?"""
-        return abs(self.state[0]) == abs(self.state[1])
 
     def __neg__(self):
         return negation(self)
@@ -115,10 +110,22 @@ class Qubits(Qubit):
 
     def __str__(self):
         if self.entangled():
-            return f"Entangled{self!r}"
+            state = self.state.tolist()
+            state = [format_one_over_root_2(s) for s in state]
+            state = ", ".join(state)
+            return f"Entangled{self.__class__.__name__}(state=[{state}])"
         qubits = tensor_factor(self)
         qubits = " ⊗ ".join(str(q) for q in qubits)
         return f"{self.__class__.__name__}(state={qubits})"
+
+
+def format_one_over_root_2(v):
+    if np.allclose(abs(v), _ONE_OVER_ROOT_TWO):
+        if v < 0:
+            return "-1/√2"
+        else:
+            return "1/√2"
+    return str(v)
 
 
 def tensor_product(*qubits: Qubit) -> Qubits:

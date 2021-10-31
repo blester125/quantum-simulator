@@ -1,2 +1,223 @@
 #+title: Quantum Simulation
 #+author: Brian Lester
+
+#+begin_src python :session :noweb :exports None
+import quantum
+#+end_src
+
+#+RESULTS:
+
+* Qubits
+#+begin_src python :session :exports both
+quantum.Qubit([1, 0])
+#+end_src
+
+#+RESULTS:
+: |0⟩
+
+#+begin_src python :session
+quantum.Qubit([0, 1])
+#+end_src
+
+#+RESULTS:
+: |1⟩
+
+* Qubits as Vectors
+** Super Postion
+#+begin_src python :session
+quantum.super_position(quantum.zero())
+#+end_src
+
+#+RESULTS:
+: Qubit(state=[1/√2, 1/√2])
+
+** Measurement
+#+begin_src python :session :results output
+qubit = quantum.super_position(quantum.zero())
+
+print(qubit.measure())
+print(qubit.measure())
+print(qubit.measure())
+print(qubit.measure())
+#+end_src
+
+#+RESULTS:
+: |1⟩
+: |0⟩
+: |0⟩
+: |1⟩
+
+* Four Functions on 1 Bit
+** Identity
+#+begin_src python :session
+quantum.identity(quantum.zero(), quantum.zero())[1]
+#+end_src
+
+#+RESULTS:
+: |0⟩
+
+#+begin_src python :session
+quantum.identity(quantum.one(), quantum.zero())[1]
+#+end_src
+
+#+RESULTS:
+: |1⟩
+** Negation
+#+begin_src python :session
+quantum.negation(quantum.zero())
+#+end_src
+
+#+RESULTS:
+: |1⟩
+
+#+begin_src python :session
+quantum.negation(quantum.one())
+#+end_src
+
+#+RESULTS:
+: |0⟩
+** Constant $0$
+#+begin_src python :session
+quantum.constant_0(quantum.zero(), quantum.zero())[1]
+#+end_src
+
+#+RESULTS:
+: |0⟩
+
+#+begin_src python :session
+quantum.constant_0(quantum.one(), quantum.zero())[1]
+#+end_src
+
+#+RESULTS:
+: |0⟩
+
+** Constant $1$
+#+begin_src python :session
+quantum.constant_1(quantum.zero(), quantum.zero())[1]
+#+end_src
+
+#+RESULTS:
+: |1⟩
+
+#+begin_src python :session
+quantum.constant_1(quantum.one(), quantum.zero())[1]
+#+end_src
+
+#+RESULTS:
+: |1⟩
+
+** Reversible Functions
+#+begin_src python :session
+quantum.identity(
+    *quantum.identity(quantum.one(), quantum.zero())
+)[1]
+#+end_src
+
+#+RESULTS:
+: |0⟩
+#+begin_src python :session
+quantum.negation_two_op(
+    *quantum.negation_two_op(quantum.one(), quantum.zero())
+)[0]
+#+end_src
+
+#+RESULTS:
+: |1⟩
+
+* Multiple Qubits as Tensor Products
+#+begin_src python :session
+quantum.tensor_product(quantum.zero(), quantum.one(), quantum.super_position(quantum.one()))
+#+end_src
+
+#+RESULTS:
+: Qubits(state=|0⟩ ⊗ |1⟩ ⊗ Qubit(state=[1/√2, -1/√2]))
+
+#+begin_src python :session
+repr(quantum.tensor_product(quantum.zero(), quantum.one(), quantum.super_position(quantum.one())))
+#+end_src
+
+#+RESULTS:
+: Qubits(state=array([ 0.        , -0.        ,  0.70710678, -0.70710678,  0.        ,
+:        -0.        ,  0.        , -0.        ]))
+
+** Tensor Factoring
+#+begin_src python :session :results output
+one = quantum.one()
+zero = quantum.zero()
+half = quantum.super_position(quantum.zero())
+print(str(one), str(zero), str(half))
+
+qs = quantum.tensor_product(one, zero, half)
+print(qs)
+print(repr(qs))
+
+qs = quantum.tensor_factor(qs)
+print(" ".join(str(q) for q in qs))
+#+end_src
+
+#+RESULTS:
+: |1⟩ |0⟩ Qubit(state=[1/√2, 1/√2])
+: Qubits(state=|1⟩ ⊗ |0⟩ ⊗ Qubit(state=[1/√2, 1/√2]))
+: Qubits(state=array([0.        , 0.        , 0.        , 0.        , 0.70710678,
+:        0.70710678, 0.        , 0.        ]))
+: |1⟩ |0⟩ Qubit(state=[1/√2, 1/√2])
+
+** CNOT
+#+begin_src python :session :results output
+print(quantum.cnot(quantum.zero(), quantum.zero())[1])
+print(quantum.cnot(quantum.zero(), quantum.one())[1])
+print(quantum.cnot(quantum.one(), quantum.zero())[1])
+print(quantum.cnot(quantum.one(), quantum.one())[1])
+#+end_src
+
+#+RESULTS:
+: |0⟩
+: |1⟩
+: |1⟩
+: |0⟩
+*** CNOT is reversible
+#+begin_src python :session
+quantum.cnot(*quantum.cnot(quantum.one(), quantum.zero()))[1]
+#+end_src
+
+#+RESULTS:
+: |0⟩
+
+* Deutsch Oracle
+#+begin_src python :session :results output
+print(f"Identity is:      {quantum.deutsch_oracle(quantum.identity)}")
+print(f"Negation is:      {quantum.deutsch_oracle(quantum.negation_two_op)}")
+print(f"Constant Zero is: {quantum.deutsch_oracle(quantum.constant_0)}")
+print(f"Constant One is:  {quantum.deutsch_oracle(quantum.constant_1)}")
+#+end_src
+
+#+RESULTS:
+: Identity is:      variable
+: Negation is:      variable
+: Constant Zero is: constant
+: Constant One is:  constant
+
+* Entanglement
+#+begin_src python :session :results output
+qs = quantum.make_entangled()
+print(qs)
+print(qs.measure())
+print(qs.measure())
+print(qs.measure())
+print(qs.measure())
+print(qs.measure())
+print(qs.measure())
+print(qs.measure())
+print(qs.measure())
+#+end_src
+
+#+RESULTS:
+: EntangledQubits(state=[1/√2, 0.0, 0.0, 1/√2])
+: Qubits(state=|0⟩ ⊗ |0⟩)
+: Qubits(state=|0⟩ ⊗ |0⟩)
+: Qubits(state=|1⟩ ⊗ |1⟩)
+: Qubits(state=|1⟩ ⊗ |1⟩)
+: Qubits(state=|1⟩ ⊗ |1⟩)
+: Qubits(state=|0⟩ ⊗ |0⟩)
+: Qubits(state=|0⟩ ⊗ |0⟩)
+: Qubits(state=|0⟩ ⊗ |0⟩)
