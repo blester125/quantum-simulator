@@ -308,3 +308,5 @@ ad = 0
 bc = 0
 db = 1/√2
 #+end_example
+
+In the above, for =ad= to be zero, either =a= or =d= needs to be zero. If =a= is zero, then =ac= can't be =1/√2=, and if =d= is zero, then =db= can't be =1/√2=.
