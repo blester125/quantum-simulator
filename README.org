@@ -1,6 +1,8 @@
 #+title: Quantum Simulation
 #+author: Brian Lester
 
+This repo implements a simple simulation of Quantum Computing following the Gate Quantum Computation model. More information about this model can be found in this [[https://www.microsoft.com/en-us/research/video/quantum-computing-computer-scientists/#!related_info][talk]] at Microsoft and the accompanying [[https://www.microsoft.com/en-us/research/uploads/prod/2018/05/40655.compressed.pdf][slides]].
+
 #+begin_src python :session :noweb :exports None
 import quantum
 #+end_src
@@ -8,6 +10,8 @@ import quantum
 #+RESULTS:
 
 * Qubits
+A qubit is our unit of computation, it has a state vector of 2 elements and the values of the vector can be used to tell what state the qubit. When the vector values are only 1 or 0, we can represent a classical bit with the vector. In this case we can think of the state vector as a one-hot index of the state with =[1, 0]= being zero and =[0, 1]= being one.
+
 #+begin_src python :session :exports both
 quantum.Qubit([1, 0])
 #+end_src
@@ -22,18 +26,31 @@ quantum.Qubit([0, 1])
 #+RESULTS:
 : |1⟩
 
-* Qubits as Vectors
+** Normalization
+The state vector of a qubit is required to be normalized, that is =[a, b], ǁaǁ² + ǁbǁ² = 1=.
 ** Super Postion
+Qubits can go beyond classical bits as they aren't restricted to values of only 0 and 1.  States with non 0/1 values result in values in both position and this represents the Qubit being in a Super Postion. This represents the Qubit being in both states at once, until it is measured. A critical note is that the Qubit is not secretly in one state of the other until we measure which one it it, it is actually in both states /at the same time/.
+
+The hadamard gate is commonly used to put a Qubit into an even superposition.
+
 #+begin_src python :session :exports both
-quantum.super_position(quantum.zero())
+quantum.hadamard(quantum.zero())
 #+end_src
 
 #+RESULTS:
 : Qubit(state=[1/√2, 1/√2])
 
+** Probability of State
+Given that the state vector is normalized (the sum of squares sum to one). We can interpret the state vector (or more accurately the square of the state) as the probability of  the qubit collapsing to some state.
+
+For example, a state of =[1/√2, 1/√2]= has a =ǁ1/√2ǁ² = 1/2= chance of collapsing to 0 or 1. A =[1, 0]= has a 100% change of collapsing to 0.
 ** Measurement
+When you measure a qubit, you collapse the superposition and the qubit now has a single state. Which state is collapses to depends on the probability of the state.
+
+Below, we can see measurements from a qubit in super position that has equal probability for zero and one. We see that it collapses to zero and one in about the same ratio.
+
 #+begin_src python :session :results output :exports both
-qubit = quantum.super_position(quantum.zero())
+qubit = quantum.hadamard(quantum.zero())
 
 print(qubit.measure())
 print(qubit.measure())
@@ -48,7 +65,13 @@ print(qubit.measure())
 : |1⟩
 
 * Four Functions on 1 Bit
+There are 4 functions that can be computed on a single bit. We can represent these functions as matrices that are multiplied with the state vector.
+
+Some of these functions have 2 inputs (an input and output bit which is generally |0⟩). Each function then returns 2 bits, the input bit has the same value as the input and the output bit has the value of the function applied to the input bit. The reason we do this will be explained later.
+
 ** Identity
+The identity function returns the same value as the input.
+
 #+begin_src python :session :exports both
 quantum.identity(quantum.zero(), quantum.zero())[1]
 #+end_src
@@ -63,20 +86,23 @@ quantum.identity(quantum.one(), quantum.zero())[1]
 #+RESULTS:
 : |1⟩
 ** Negation
+The negation function returns the negation of the input bit in the output.
+
 #+begin_src python :session :exports both
-quantum.negation(quantum.zero())
+quantum.negation_two_op(quantum.zero(), quantum.zero())[1]
 #+end_src
 
 #+RESULTS:
 : |1⟩
 
 #+begin_src python :session :exports both
-quantum.negation(quantum.one())
+quantum.negation_two_op(quantum.one(), quantum.zero())[1]
 #+end_src
 
 #+RESULTS:
 : |0⟩
-** Constant $0$
+** Constant 0
+The Constant 0 function writes |0⟩  to the output bit.
 #+begin_src python :session :exports both
 quantum.constant_0(quantum.zero(), quantum.zero())[1]
 #+end_src
@@ -91,7 +117,9 @@ quantum.constant_0(quantum.one(), quantum.zero())[1]
 #+RESULTS:
 : |0⟩
 
-** Constant $1$
+** Constant 1
+The Constant 1 function writes |1⟩  to the output bit.
+
 #+begin_src python :session :exports both
 quantum.constant_1(quantum.zero(), quantum.zero())[1]
 #+end_src
@@ -106,7 +134,11 @@ quantum.constant_1(quantum.one(), quantum.zero())[1]
 #+RESULTS:
 : |1⟩
 
-** Reversible Functions
+** Reversible Functions (and self inverses)
+In quantum computing, functions need to be reversible (you can recover the input from the output). Some functions (like Constant 0 and Constant 1) destroy information and we cannot find the input from the output (both |0⟩  and |1⟩ result in |0⟩. We can get around this with the input and output bit setup mentioned above. This gives us enough information to recover the input from the output.
+
+In addition to being reversible, quantum computations are their own inverses, that feeding the outputs back into the model return the original input.
+
 #+begin_src python :session :exports both
 quantum.identity(
     *quantum.identity(quantum.one(), quantum.zero())
@@ -124,16 +156,43 @@ quantum.negation_two_op(
 #+RESULTS:
 : |1⟩
 
+*** Hadamard
+The requirement of reversibility and self inverse explains the slightly strange setup of the hadamard function. The function is expressed as a matrix:
+
+#+begin_example
+[[1/√2, 1/√2],
+ [1/√2, -1/√2]]
+#+end_example
+
+When we use this, we see that the super position state for |0⟩ and |1⟩  are different.
+#+begin_src python :session
+quantum.hadamard(quantum.zero())
+#+end_src
+
+#+RESULTS:
+: Qubit(state=[1/√2, 1/√2])
+
+#+begin_src python :session
+quantum.hadamard(quantum.one())
+#+end_src
+
+#+RESULTS:
+: Qubit(state=[1/√2, -1/√2])
+
+If we used a matrix made only from =1/√2= we could tell which state was the input and therefore not be able to reverse the function.
+
 * Multiple Qubits as Tensor Products
+Multiple Qubits can be represented as a single vector by taking the tensor product of the various qubit states. The single vector representation of =n= qubits always has the shape of =2ⁿ=, This explains how it takes an exponential amount of memory to simulate on a conventional computer.
+
 #+begin_src python :session :exports both
-quantum.tensor_product(quantum.zero(), quantum.one(), quantum.super_position(quantum.one()))
+quantum.tensor_product(quantum.zero(), quantum.one(), quantum.hadamard(quantum.one()))
 #+end_src
 
 #+RESULTS:
 : Qubits(state=|0⟩ ⊗ |1⟩ ⊗ Qubit(state=[1/√2, -1/√2]))
 
 #+begin_src python :session :exports both
-repr(quantum.tensor_product(quantum.zero(), quantum.one(), quantum.super_position(quantum.one())))
+repr(quantum.tensor_product(quantum.zero(), quantum.one(), quantum.hadamard(quantum.one())))
 #+end_src
 
 #+RESULTS:
@@ -141,10 +200,12 @@ repr(quantum.tensor_product(quantum.zero(), quantum.one(), quantum.super_positio
 :        -0.        ,  0.        , -0.        ]))
 
 ** Tensor Factoring
+After combing qubits into a single vector, and performing some operations on it, can be converted back into =n= qubits (with a state of size =2=) by factoring the vector. Instead of explicitly doing this, we use a table of pre-computed factors as we tend to stick to a few well known values.
+
 #+begin_src python :session :results output :exports both
 one = quantum.one()
 zero = quantum.zero()
-half = quantum.super_position(quantum.zero())
+half = quantum.hadamard(quantum.zero())
 print(str(one), str(zero), str(half))
 
 qs = quantum.tensor_product(one, zero, half)
@@ -163,6 +224,7 @@ print(" ".join(str(q) for q in qs))
 : |1⟩ |0⟩ Qubit(state=[1/√2, 1/√2])
 
 ** CNOT
+One of the core operations in quantum computing is =CNOT=. The =CNOT= function takes a control bit and an input bit and flips the input bit iﬀ the control bit is |1⟩.
 #+begin_src python :session :results output :exports both
 print(quantum.cnot(quantum.zero(), quantum.zero())[1])
 print(quantum.cnot(quantum.zero(), quantum.one())[1])
@@ -176,6 +238,7 @@ print(quantum.cnot(quantum.one(), quantum.one())[1])
 : |1⟩
 : |0⟩
 *** CNOT is reversible
+Like all quantum computations, =CNOT= is reversible.
 #+begin_src python :session :exports both
 quantum.cnot(*quantum.cnot(quantum.one(), quantum.zero()))[1]
 #+end_src
@@ -184,6 +247,12 @@ quantum.cnot(*quantum.cnot(quantum.one(), quantum.zero()))[1]
 : |0⟩
 
 * Deutsch Oracle
+The Deutsch Oracle is one of the simplest algorithms where the quantum algorithm is better than the classical algorithm.
+
+The problem setup is that you are given a black box that contains one of the 4 functions on 1 bit. We are tasked with the decision problem of deciding if the function is a constant function or a variable function (the output changes based on the input). In the classical algorithm it takes 2 queries to solve, but the quantum algorithm only takes one.
+
+The video explains this a lot better but the core idea is that the differences between functions within a category are removed while the differences in functions is different categories are expanded.
+
 #+begin_src python :session :results output :exports both
 print(f"Identity is:      {quantum.deutsch_oracle(quantum.identity)}")
 print(f"Negation is:      {quantum.deutsch_oracle(quantum.negation_two_op)}")
@@ -197,7 +266,14 @@ print(f"Constant One is:  {quantum.deutsch_oracle(quantum.constant_1)}")
 : Constant Zero is: constant
 : Constant One is:  constant
 
+The algorithm can be extended to functions that operate on =n= bits where it is called the Deutsch-Josza algorithm. This generalized version was the inspiration for Shor's algorithm (the quantum algorithm for factoring large numbers, which will break RSA-type encryption once quantum computers are large enough).
+
 * Entanglement
+Quantum entanglement is one for the more suprising and often talked about aspects of quantum mechanics. If two quantum particles are entangled, and you measure the "spin" of one particle (thus collapsing its wave function) the wave function of the other particle is also collapsed and when we measure its "spin" it will always be the opposite of the first particle. This happens without communication and at any distance, faster than the speed of light.
+
+We can create entangled particles fairly simply by applying =CNOT= with a qubit in a superposition as the control bit and the qubit we want to entangle as the input bit.
+
+Below we can see how each time we measure the combination of two tangled qubits we get the same state for both qubits.
 #+begin_src python :session :results output :exports both
 qs = quantum.make_entangled()
 print(qs)
@@ -221,3 +297,14 @@ print(qs.measure())
 : Qubits(state=|0⟩ ⊗ |0⟩)
 : Qubits(state=|0⟩ ⊗ |0⟩)
 : Qubits(state=|0⟩ ⊗ |0⟩)
+** Math of Entanglement
+When two qubits are entangled, the combined vector cannot be factored. If it could, you would end up with two different qubits that you can measure separately and get two different answers. Instead you need to measure the combined vector and the result is a two qubits with the same state.
+
+When you try to factor a vector of entangled qubits you end up with an unsolvable system of equations.
+#+begin_example
+[a b] ⊗ [c d] = [1/√2, 0.0, 0.0, 1/√2]
+ac = 1/√2
+ad = 0
+bc = 0
+db = 1/√2
+#+end_example

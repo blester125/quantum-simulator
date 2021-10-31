@@ -26,7 +26,7 @@ def test_qubits_enforce_normalized():
 def test_num_qubits():
     possible_qubits = (quantum.zero(),
                        quantum.one(),
-                       quantum.super_position(quantum.zero()))
+                       quantum.hadamard(quantum.zero()))
     for i in range(2, 5):
         qubits = [np.random.choice(possible_qubits) for _ in range(i)]
         qubits = quantum.tensor_product(*qubits)
@@ -35,10 +35,11 @@ def test_num_qubits():
 
 def test_make_entangled():
     qus = quantum.make_entangled()
-    np.testing.assert_allclose(qus.state, np.array([quantum._ONE_OVER_ROOT_TWO,
-                                                    0,
-                                                    0,
-                                                    quantum._ONE_OVER_ROOT_TWO]))
+    np.testing.assert_allclose(qus.state,
+                               np.array([quantum._ONE_OVER_ROOT_TWO,
+                                         0,
+                                         0,
+                                         quantum._ONE_OVER_ROOT_TWO]))
 
 
 def test_entangled():
@@ -55,11 +56,11 @@ def test_entangled():
      (quantum.one(), np.array([quantum._ONE_OVER_ROOT_TWO,
                                -quantum._ONE_OVER_ROOT_TWO]))))
 def test_hadamard(i, expected):
-    q = quantum.super_position(i)
+    q = quantum.hadamard(i)
     np.testing.assert_allclose(q.state, expected)
 
 
-@pytest.mark.parametrize("func", (quantum.super_position, quantum.negation))
+@pytest.mark.parametrize("func", (quantum.hadamard, quantum.negation))
 @pytest.mark.parametrize("i", (quantum.zero(), quantum.one()))
 def test_inverse(func, i):
     np.testing.assert_allclose(func(func(i)).state, i.state, atol=1e-7)
@@ -71,10 +72,10 @@ def test_negation(i, expected):
     np.testing.assert_allclose(quantum.negation(i).state, expected.state)
 
 
-def test_super_position_random():
+def test_even_super_position_random():
     counts = collections.Counter()
     for _ in range(TRIALS):
-        q = quantum.super_position(quantum.zero())
+        q = quantum.hadamard(quantum.zero())
         q = q.measure()
         state = np.argmax(q.state)
         counts[state] += 1
@@ -85,12 +86,18 @@ def test_super_position_random():
 
 
 @pytest.mark.parametrize("qubits,expected",
-    (((quantum.zero(), quantum.zero()), np.array([1, 0, 0, 0])),
-     ((quantum.zero(), quantum.one()), np.array([0, 1, 0, 0])),
-     ((quantum.one(), quantum.zero()), np.array([0, 0, 1, 0])),
-     ((quantum.one(), quantum.one()), np.array([0, 0, 0, 1])),
-     ((quantum.one(), quantum.one(), quantum.zero()), np.array([0, 0, 0, 0, 0, 0, 1, 0])),
-     ((quantum.one(), quantum.zero(), quantum.zero()), np.array([0, 0, 0, 0, 1, 0, 0, 0]))))
+    (((quantum.zero(), quantum.zero()),
+      np.array([1, 0, 0, 0])),
+     ((quantum.zero(), quantum.one()),
+      np.array([0, 1, 0, 0])),
+     ((quantum.one(), quantum.zero()),
+      np.array([0, 0, 1, 0])),
+     ((quantum.one(), quantum.one()),
+      np.array([0, 0, 0, 1])),
+     ((quantum.one(), quantum.one(), quantum.zero()),
+      np.array([0, 0, 0, 0, 0, 0, 1, 0])),
+     ((quantum.one(), quantum.zero(), quantum.zero()),
+      np.array([0, 0, 0, 0, 1, 0, 0, 0]))))
 def test_tensor_product(qubits, expected):
     qs = quantum.tensor_product(*qubits)
     np.testing.assert_allclose(qs.state, expected)
@@ -156,9 +163,10 @@ def test_negation(i, expected):
     np.testing.assert_allclose(o2.state, expected.state)
 
 
-@pytest.mark.parametrize("func,expected", ((quantum.identity, "variable"),
-                                           (quantum.negation_two_op, "variable"),
-                                           (quantum.constant_0, "constant"),
-                                           (quantum.constant_1, "constant")))
+@pytest.mark.parametrize("func,expected",
+                         ((quantum.identity, "variable"),
+                          (quantum.negation_two_op, "variable"),
+                          (quantum.constant_0, "constant"),
+                          (quantum.constant_1, "constant")))
 def deutsch_oracle(func, expected):
     assert func() == expected

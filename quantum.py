@@ -54,7 +54,7 @@ class Qubit:
         return np.square(self.state)
 
     def measure(self):
-        """Collapse the wave function, results in a Qubit of either |0⟩ or |1⟩."""
+        """Collapse the wave function, results in a Qubit of |0⟩ or |1⟩."""
         m = np.random.choice(range(len(self.state)), p=np.square(self.state))
         state = np.zeros_like(self.state)
         state[m] = 1
@@ -129,7 +129,7 @@ def format_one_over_root_2(v):
 
 
 def tensor_product(*qubits: Qubit) -> Qubits:
-    """Create a vector representaiton of multiple qubits with the Knocker Product."""
+    """Create a vector of multiple qubits with the Kronecker Product."""
     # This can also be done with a ⊗ b = np.reshape((b @ a.T), (-1, 1))
     current = qubits[0].state
     for qubit in qubits[1:]:
@@ -217,8 +217,8 @@ def cnot(control: Qubit, input: Qubit) -> Tuple[Qubit, Qubit]:
     return tensor_factor(Qubits(result))
 
 
-def super_position(qubit: Qubit) -> Qubit:
-    """Move the qubit into an even super_position of |0⟩ and |1⟩."""
+def hadamard(qubit: Qubit) -> Qubit:
+    """Move the qubit into an even super position of |0⟩ and |1⟩."""
     return _single_bit_op(qubit, _HADAMARD)
 
 
@@ -226,7 +226,7 @@ def make_entangled() -> Qubits:
     """Create two Qubits that are entangled."""
     q1 = zero()
     q2 = zero()
-    q1 = super_position(q1)
+    q1 = hadamard(q1)
     return cnot(q1, q2)
 
 
@@ -257,11 +257,11 @@ def deutsch_oracle(func: Callable[[Qubit, Qubit], Tuple[Qubit, Qubit]]) -> bool:
     output = zero()
     input = negation(input)
     output = negation(output)
-    input = super_position(input)
-    output = super_position(output)
+    input = hadamard(input)
+    output = hadamard(output)
     input, output = func(input, output)
-    input = super_position(input)
-    output = super_position(output)
+    input = hadamard(input)
+    output = hadamard(output)
     input = input.measure()
     output = output.measure()
     if input.is_one() and output.is_one():
@@ -273,8 +273,8 @@ def deutsch_oracle(func: Callable[[Qubit, Qubit], Tuple[Qubit, Qubit]]) -> bool:
 if __name__ == "__main__":
     print(f"Zero: {zero()}")
     print(f"One: {one()}")
-    print(f"Super Position: {super_position(zero())}")
-    qs = tensor_product(one(), zero(), super_position(zero()))
+    print(f"Super Position: {hadamard(zero())}")
+    qs = tensor_product(one(), zero(), hadamard(zero()))
     print(f"MultiQubit: {qs!r} = {qs}")
     print(f"Identity is '{deutsch_oracle(identity)}'.")
     print(f"Negation is '{deutsch_oracle(negation_two_op)}'.")
