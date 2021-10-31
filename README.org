@@ -15,7 +15,7 @@ quantum.Qubit([1, 0])
 #+RESULTS:
 : |0⟩
 
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.Qubit([0, 1])
 #+end_src
 
@@ -24,7 +24,7 @@ quantum.Qubit([0, 1])
 
 * Qubits as Vectors
 ** Super Postion
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.super_position(quantum.zero())
 #+end_src
 
@@ -32,7 +32,7 @@ quantum.super_position(quantum.zero())
 : Qubit(state=[1/√2, 1/√2])
 
 ** Measurement
-#+begin_src python :session :results output
+#+begin_src python :session :results output :exports both
 qubit = quantum.super_position(quantum.zero())
 
 print(qubit.measure())
@@ -49,42 +49,42 @@ print(qubit.measure())
 
 * Four Functions on 1 Bit
 ** Identity
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.identity(quantum.zero(), quantum.zero())[1]
 #+end_src
 
 #+RESULTS:
 : |0⟩
 
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.identity(quantum.one(), quantum.zero())[1]
 #+end_src
 
 #+RESULTS:
 : |1⟩
 ** Negation
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.negation(quantum.zero())
 #+end_src
 
 #+RESULTS:
 : |1⟩
 
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.negation(quantum.one())
 #+end_src
 
 #+RESULTS:
 : |0⟩
 ** Constant $0$
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.constant_0(quantum.zero(), quantum.zero())[1]
 #+end_src
 
 #+RESULTS:
 : |0⟩
 
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.constant_0(quantum.one(), quantum.zero())[1]
 #+end_src
 
@@ -92,14 +92,14 @@ quantum.constant_0(quantum.one(), quantum.zero())[1]
 : |0⟩
 
 ** Constant $1$
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.constant_1(quantum.zero(), quantum.zero())[1]
 #+end_src
 
 #+RESULTS:
 : |1⟩
 
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.constant_1(quantum.one(), quantum.zero())[1]
 #+end_src
 
@@ -107,7 +107,7 @@ quantum.constant_1(quantum.one(), quantum.zero())[1]
 : |1⟩
 
 ** Reversible Functions
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.identity(
     *quantum.identity(quantum.one(), quantum.zero())
 )[1]
@@ -115,7 +115,7 @@ quantum.identity(
 
 #+RESULTS:
 : |0⟩
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.negation_two_op(
     *quantum.negation_two_op(quantum.one(), quantum.zero())
 )[0]
@@ -125,14 +125,14 @@ quantum.negation_two_op(
 : |1⟩
 
 * Multiple Qubits as Tensor Products
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.tensor_product(quantum.zero(), quantum.one(), quantum.super_position(quantum.one()))
 #+end_src
 
 #+RESULTS:
 : Qubits(state=|0⟩ ⊗ |1⟩ ⊗ Qubit(state=[1/√2, -1/√2]))
 
-#+begin_src python :session
+#+begin_src python :session :exports both
 repr(quantum.tensor_product(quantum.zero(), quantum.one(), quantum.super_position(quantum.one())))
 #+end_src
 
@@ -141,7 +141,7 @@ repr(quantum.tensor_product(quantum.zero(), quantum.one(), quantum.super_positio
 :        -0.        ,  0.        , -0.        ]))
 
 ** Tensor Factoring
-#+begin_src python :session :results output
+#+begin_src python :session :results output :exports both
 one = quantum.one()
 zero = quantum.zero()
 half = quantum.super_position(quantum.zero())
@@ -163,7 +163,7 @@ print(" ".join(str(q) for q in qs))
 : |1⟩ |0⟩ Qubit(state=[1/√2, 1/√2])
 
 ** CNOT
-#+begin_src python :session :results output
+#+begin_src python :session :results output :exports both
 print(quantum.cnot(quantum.zero(), quantum.zero())[1])
 print(quantum.cnot(quantum.zero(), quantum.one())[1])
 print(quantum.cnot(quantum.one(), quantum.zero())[1])
@@ -176,7 +176,7 @@ print(quantum.cnot(quantum.one(), quantum.one())[1])
 : |1⟩
 : |0⟩
 *** CNOT is reversible
-#+begin_src python :session
+#+begin_src python :session :exports both
 quantum.cnot(*quantum.cnot(quantum.one(), quantum.zero()))[1]
 #+end_src
 
@@ -184,7 +184,7 @@ quantum.cnot(*quantum.cnot(quantum.one(), quantum.zero()))[1]
 : |0⟩
 
 * Deutsch Oracle
-#+begin_src python :session :results output
+#+begin_src python :session :results output :exports both
 print(f"Identity is:      {quantum.deutsch_oracle(quantum.identity)}")
 print(f"Negation is:      {quantum.deutsch_oracle(quantum.negation_two_op)}")
 print(f"Constant Zero is: {quantum.deutsch_oracle(quantum.constant_0)}")
@@ -198,7 +198,7 @@ print(f"Constant One is:  {quantum.deutsch_oracle(quantum.constant_1)}")
 : Constant One is:  constant
 
 * Entanglement
-#+begin_src python :session :results output
+#+begin_src python :session :results output :exports both
 qs = quantum.make_entangled()
 print(qs)
 print(qs.measure())
